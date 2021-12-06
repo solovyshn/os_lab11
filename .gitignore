@@ -3,3 +3,8 @@
 ################################################################################
 
 /.vs
+/StudentProcess/.vs
+/StudentProcess/Debug
+/TeacherProcess/.vs
+/TeacherProcess/Debug
+
