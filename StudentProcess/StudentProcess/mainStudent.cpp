@@ -11,10 +11,13 @@ using namespace std;
 
 #define SIZE 9000
 TCHAR name[] = TEXT("BOARD");
+TCHAR nameV[] = TEXT("VOTING");
 HANDLE accessFile;
 HANDLE timeMUT;
 HANDLE mutBoard;
+HANDLE mutVote;
 HANDLE mapping;
+HANDLE mappingV;
 
 
 
@@ -30,8 +33,10 @@ int main(int argc, char* argv[])
 
 	timeMUT = CreateMutexW(NULL, false, (LPCWSTR)"timeMUT");
 	mutBoard = CreateMutexW(NULL, false, (LPCWSTR)"boardMUT");
+	mutVote = CreateMutexW(NULL, false, (LPCWSTR)"voteMUT");
 
 	char* charPointer = NULL;
+	char* charPointerV = NULL;
 	char* access = new char[2];
 	DWORD rd;
 	int numOfIdea = 0;
@@ -87,9 +92,58 @@ int main(int argc, char* argv[])
 			ReleaseMutex(mutBoard);
 		}
 	}
+
+	//voting
+	//open mapping
+	LPVOID pBuf2 = (void*)MapViewOfFile(mapping, FILE_MAP_ALL_ACCESS, 0, 0, SIZE);
+	if (pBuf2 == nullptr) { return -1; }
+
+	//set pointer in the end of file
+	char* newArr2 = (char*)pBuf2;
+	int line = 0;
+	for (int i = 0; i < SIZE; i++) {
+		if (newArr2[i] == '\n') {
+			line++;
+		}
+	}
+	
+	int random =  rand() % line + 1;
+
+	char DataV[4];
+	std::sprintf(DataV, "%d\n", random);
+	Sleep(20000);
+
+	WaitForSingleObject(mutVote, INFINITE);
+
+	//open mapping
+	mappingV = OpenFileMapping(FILE_MAP_ALL_ACCESS, true, nameV);
+	if (mappingV == NULL) { return -1; }
+	LPVOID pBufV = (void*)MapViewOfFile(mappingV, FILE_MAP_ALL_ACCESS, 0, 0, SIZE);
+	if (pBufV == nullptr) { return -1; }
+
+	//set pointer in the end of file
+	char* newArr = (char*)pBufV;
+	int lastn = 0;
+	for (int i = 0; i < SIZE; i++) {
+		if (newArr[i] == '\n') {
+			lastn = i;
+		}
+	}
+	charPointerV = (char*)pBufV;
+	charPointerV += lastn + 1;
+	pBufV = (void*)charPointerV;
+
+	//write to file
+	snprintf((char*)pBufV, sizeof(DataV), DataV);
+	cout << DataV;
+
+	ReleaseMutex(mutVote);
+
 	//getchar();
 	UnmapViewOfFile(mapping);
+	UnmapViewOfFile(mappingV);
 	CloseHandle(mutBoard);
+	CloseHandle(mutVote);
 
 	return 0;
 }
