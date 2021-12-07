@@ -132,14 +132,19 @@ int main(int argc, char* argv[])
 
 
 	//голосування
-
+	cout << "Wait for the results of voting...\n";
 	//чекаєм шоб голосування записалося у файл
-	Sleep(10);
+	Sleep(1 * 60 * 1500);
 
 	//looking for the end
 	LPVOID pBuf2 = (void*)MapViewOfFile(mapping2, FILE_MAP_READ, 0, 0, SIZE);
 	if (pBuf2 == nullptr) { return -1; }
 	char* newArr2 = (char*)pBuf2;
+	int* nums = new int[k+1];
+	for (int i = 0; i < k + 1; i++) {
+		nums[i] = 0;
+	}
+	
 	int lastn2 = 0;
 	for (int i = 0; i < SIZE; i++) {
 		if (newArr2[i] == '\n') {
@@ -147,14 +152,17 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	//reading file, write to console
-	newArr2 = (char*)pBuf2;
-
-	for (int i = 0; i < lastn2 + 1; i++)
-	{
-		cout << newArr2[i] << "\t";
+	for (int i = 0; i < lastn2; i++) {
+		for (int j = 0; j <= k; j++) {
+			int l = j + 1;
+			if (newArr2[i] == to_string(l)[0]) {
+				nums[l]++;
+			}
+		}
 	}
-
+	for (int i = 0; i < lastn2; i++) {
+		cout << i << "\t" << nums[i] << endl;
+	}
 
 
 	getchar();
