@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <cstdlib> 
 #include <time.h> 
@@ -44,7 +45,7 @@ int main(int argc, char* argv[])
 	cout << "Enter count of students: " << endl;
 	int countOfStudents;
 	cin >> countOfStudents;
-	//думаю, тут можна ще меншу межу поставити
+	//пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	if (countOfStudents > 99) {
 		cout << "Too big number of students.\nMaximum number is 99\n";
 		return -1;
@@ -87,7 +88,7 @@ int main(int argc, char* argv[])
 	}
 
 
-	Sleep(2 * 60 * 1000);//2 minutes wait
+ 	 Sleep(2 * 60 * 1000);//2 minutes wait
 
 	timeMUT = CreateMutexW(NULL, false, (LPCWSTR)"timeMUT");
 	WaitForSingleObject(timeMUT, INFINITE);
@@ -102,7 +103,7 @@ int main(int argc, char* argv[])
 		TerminateProcess(&(students[i].pi.hProcess), 0);
 	}
 
-	cout << "Time's over.\nWait for loading ideas...\n";
+	cout << "Time's over.\n\nWait for loading ideas...\n\n";
 
 	Sleep(1 * 60 * 1500);//1 minute wait
 
@@ -131,10 +132,10 @@ int main(int argc, char* argv[])
 	}
 
 
-	//голосування
-	cout << "Wait for the results of voting...\n";
-	//чекаєм шоб голосування записалося у файл
-	Sleep(1 * 60 * 1500);
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	cout << "\nWait for the results of voting...\n\n";
+	//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
+    Sleep(1 * 60 * 1500);
 
 	//looking for the end
 	LPVOID pBuf2 = (void*)MapViewOfFile(mapping2, FILE_MAP_READ, 0, 0, SIZE);
@@ -160,11 +161,101 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
+	//for (int i = 0; i < lastn2; i++) {
+	//	cout << "Idea: "<< i << " Votes: " << nums[i] << endl;
+	//}
+
+	//selecting top 3
+
+	//find max quontity of votes for one idea
+	int maxVotes = 0;
 	for (int i = 0; i < lastn2; i++) {
-		cout << i << "\t" << nums[i] << endl;
+		if (maxVotes < nums[i]) maxVotes = nums[i];
+	}
+
+	//find indexes of top-3 ideas
+	int topIndexes[3] = {0,0,0};
+	int currentPosition = 0;
+	while (currentPosition <= 3 && maxVotes>0) {
+		for (int i = 0; i < lastn2; i++) {
+			if (maxVotes == nums[i]) {
+				topIndexes[currentPosition] = i;
+				currentPosition++;
+			}
+		}
+		maxVotes--;
+	}
+
+	cout << "Top-3:\n" << endl;
+	
+		//looking for the end
+	 pBuf = (void*)MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, SIZE);
+	if (pBuf == nullptr) { return -1; }
+	 newArr = (char*)pBuf;
+	lastn = 0;
+	for (int i = 0; i < SIZE; i++) {
+		if (newArr[i] == '\n') {
+			lastn = i;
+		}
 	}
 
 
+	//reading file, write to console
+	newArr = (char*)pBuf;
+	string result = "\nTop-3:\n";
+	for (int p = 0; p < 3; p++) {
+		k = 1;
+		bool boolka = false;
+		for (int i = 0; i < lastn + 1; i++) {
+			if (boolka == false) {
+				if (i > 0 && newArr[i - 1] == '\n') {
+					k++;
+					if (k == topIndexes[p]) {
+						cout << k << ". ";
+						cout << newArr[i];
+						result += to_string(k)+ ". ";
+						result += newArr[i];
+						boolka = true;
+					}
+				}
+
+			}
+			else if (boolka) {
+				cout << newArr[i];
+				result += newArr[i];
+				if (newArr[i + 1] == '\n') {
+					cout << endl;
+					result += "\n";
+					boolka = false; 
+				}
+			}
+		}
+	}
+
+	//cout << result;
+	//open mapping
+	char* charPointerV = NULL;
+	HANDLE mappingV = OpenFileMapping(FILE_MAP_ALL_ACCESS, true, name);
+	if (mappingV == NULL) { return -1; }
+	LPVOID pBufV = (void*)MapViewOfFile(mappingV, FILE_MAP_ALL_ACCESS, 0, 0, SIZE);
+	if (pBufV == nullptr) { return -1; }
+
+	//set pointer in the end of file
+	newArr = (char*)pBufV;
+	lastn = 0;
+	for (int i = 0; i < SIZE; i++) {
+		if (newArr[i] == '\n') {
+			lastn = i;
+		}
+	}
+	charPointerV = (char*)pBufV;
+	charPointerV += lastn + 1;
+	pBufV = (void*)charPointerV;
+
+
+	//write to file
+	snprintf((char*)pBufV, sizeof(char)* result.length(), result.c_str());
+	
 	getchar();
 	getchar();
 	getchar();
